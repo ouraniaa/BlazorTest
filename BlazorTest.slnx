@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="Application/Application.csproj" Id="49e01312-12f1-4ceb-86e0-1f43f957a0ec" />
+  <Project Path="BlazorTest/BlazorTest.csproj" />
+  <Project Path="Domain/Domain.csproj" Id="94d5e993-ee6e-4d5d-8e7d-983666a1c270" />
+  <Project Path="Infrastructure/Infrastructure.csproj" Id="42f83a80-c225-4639-9f02-645e2d13f66f" />
+</Solution>

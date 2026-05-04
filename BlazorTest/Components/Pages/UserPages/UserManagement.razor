@@ -1,0 +1,58 @@
+﻿@page "/user-management"
+@using Domain.Models
+@using Application.Interfaces
+@using Microsoft.AspNetCore.Components.QuickGrid
+@inject IUserService UserService
+@inject NavigationManager NavigationManager
+@rendermode InteractiveServer
+
+<PageTitle>User Management</PageTitle>
+
+<h1>User Management</h1>
+
+<div class="mb-3">
+    <button class="btn btn-success" @onclick="GoToCreate">Add New User</button>
+</div>
+
+@if (users == null)
+{
+    <p>Loading...</p>
+}
+else
+{
+    <QuickGrid Class="table" Items="users.AsQueryable()">
+        <PropertyColumn Property="u => u.Name" Title="Name" Sortable="true" />
+        <PropertyColumn Property="u => u.LastName" Title="Last Name" Sortable="true" />
+        <PropertyColumn Property="u => u.Email" Title="Email" />
+        <PropertyColumn Property="u => u.AFM" Title="AFM" />
+        <PropertyColumn Property="u => u.PhoneNumber" Title="Phone Number" />
+        <PropertyColumn Property="u => u.CompanyId" Title="Company Id" />
+
+        <TemplateColumn Context="user" Title="Actions">            
+            <button class="btn btn-sm btn-primary" @onclick="() => GoToEdit(user.Id)">Edit</button>
+            <button class="btn btn-sm btn-danger" @onclick="() => GoToDelete(user.Id)">Delete</button>
+        </TemplateColumn>
+    </QuickGrid>
+}
+
+@code {
+    private List<User>? users;
+
+    protected override async Task OnInitializedAsync()
+    {
+        users = await UserService.GetAllUsers();
+    }
+
+    private void GoToCreate() => NavigationManager.NavigateTo("/users/create");
+    private void GoToEdit(int id) => NavigationManager.NavigateTo($"/users/edit?id={id}");
+    private async Task GoToDelete(int id) => await HandleDelete(id);
+
+    private async Task HandleDelete(int id){
+        try{
+            await UserService.DeleteById(id);
+            NavigationManager.NavigateTo("user-management");
+        }catch (Exception ex) {
+            NavigationManager.NotFound();
+        }
+    }
+}

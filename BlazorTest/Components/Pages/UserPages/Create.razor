@@ -1,0 +1,84 @@
+﻿@page "/users/create"
+@using Application.Services
+@using Domain.Models
+@using Application.Interfaces
+@inject IUserService UserService
+@inject ICompanyService CompanyService
+@inject NavigationManager NavigationManager
+@rendermode InteractiveServer
+
+<PageTitle>Create User</PageTitle>
+
+<h1>Create</h1>
+<h2>User</h2>
+<hr />
+
+<div class="row">
+    <div class="col-md-4">
+        <EditForm Model="User" OnValidSubmit="AddUser">
+            <DataAnnotationsValidator />
+            <ValidationSummary class="text-danger" role="alert" />
+            
+            <div class="mb-3">
+                <label for="name" class="form-label">Name:</label>
+                <InputText id="name" @bind-Value="User.Name" class="form-control" />
+                <ValidationMessage For="() => User.Name" class="text-danger" />
+            </div>
+            
+            <div class="mb-3">
+                <label for="lastname" class="form-label">LastName:</label>
+                <InputText id="lastname" @bind-Value="User.LastName" class="form-control" />
+                <ValidationMessage For="() => User.LastName" class="text-danger" />
+            </div>
+
+            <div class="mb-3">
+                <label for="email" class="form-label">Email:</label>
+                <InputText id="email" @bind-Value="User.Email" class="form-control" />
+                <ValidationMessage For="() => User.Email" class="text-danger" />
+            </div>
+            <div class="mb-3">
+                <label for="AFM" class="form-label">AFM:</label>
+                <InputText id="AFM" @bind-Value="User.AFM" class="form-control" />
+                <ValidationMessage For="() => User.AFM" class="text-danger" />
+            </div>
+            <div class="mb-3">
+                <label for="Phone Number" class="form-label">Phone Number:</label>
+                <InputText id="Phone Number" @bind-Value="User.PhoneNumber" class="form-control" />
+                <ValidationMessage For="() => User.PhoneNumber" class="text-danger" />
+            </div>
+            <div class="mb-3">
+                <label for="company" class="form-label">Company:</label>
+                <InputSelect id="company" @bind-Value="User.CompanyId" class="form-select">
+                    <option value="">-- Select a Company --</option>
+                    @foreach (var company in CompaniesList)
+                    {
+                        <option value="@company.Id">@company.Name</option>
+                    }
+                </InputSelect>
+                <ValidationMessage For="() => User.CompanyId" class="text-danger" />
+            </div>
+
+            <button type="submit" class="btn btn-primary">Create</button>
+            <button type="button" class="btn btn-secondary" @onclick="Cancel">Cancel</button>
+        </EditForm>
+    </div>
+</div>
+
+@code {
+    private User User { get; set; } = new();
+    private List<Company> CompaniesList = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        CompaniesList = await CompanyService.GetAllCompanies();
+    }
+
+    private async Task AddUser()
+    {
+        await UserService.Save(User);
+        
+        NavigationManager.NavigateTo("/user-management");
+    }
+
+    private void Cancel() => NavigationManager.NavigateTo("/user-management");
+}

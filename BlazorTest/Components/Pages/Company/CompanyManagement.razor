@@ -1,0 +1,83 @@
+﻿@page "/company-management"
+@using Domain.Models
+@using Application.Interfaces
+@inject ICompanyService CompanyService
+@inject NavigationManager NavigationManager
+@rendermode InteractiveServer
+
+<h3>Company Management</h3>
+
+<button class="btn btn-success mb-3" @onclick="OpenCreateModal">Add Company</button>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Actions</th>
+            <th>Id</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var company in companies)
+        {
+            <tr>
+                <td>@company.Name</td>
+                <td>@company.Address</td>
+                <td>@company.Id</td>
+                <td>
+                    <button class="btn btn-primary btn-sm" @onclick="() => OpenEditModal(company)">Edit</button>
+                    <button class="btn btn-sm btn-danger" @onclick="() => GoToDelete(company.Id)">Delete</button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<CompanyModal IsVisible="isModalVisible" 
+              CurrentCompany="selectedCompany" 
+              OnSave="RefreshData" 
+              OnClose="HideModal" />
+
+@code {
+    private List<Company> companies = new();
+    private bool isModalVisible = false;
+    private Company selectedCompany = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await RefreshData();
+    }
+
+    private async Task RefreshData()
+    {
+        companies = await CompanyService.GetAllCompanies();
+        isModalVisible = false;
+    }
+
+    private void OpenCreateModal()
+    {
+        selectedCompany = new Company();
+        isModalVisible = true;
+    }
+
+    private void OpenEditModal(Company company)
+    {
+        selectedCompany = company;
+        isModalVisible = true;
+    }
+    private async Task GoToDelete(int id) => await HandleDelete(id);
+
+    private async Task HandleDelete(int id)
+    {
+        try
+        {
+            await CompanyService.DeleteById(id);
+            NavigationManager.NavigateTo("company-management");
+        }
+        catch (Exception ex)
+        {
+            NavigationManager.NotFound();
+        }
+    }
+    private void HideModal() => isModalVisible = false;
+}

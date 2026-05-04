@@ -1,0 +1,46 @@
+﻿@using Domain.Models
+@using Application.Interfaces
+@inject ICompanyService CompanyService
+
+@if (IsVisible)
+{
+    <ModalShell 
+        Title="@(CurrentCompany.Id == 0 ? "Add Company" : "Edit Company")"
+        OnClose="OnClose"
+        
+    >
+        <EditForm Model="CurrentCompany" OnValidSubmit="HandleInternalSave">
+            <DataAnnotationsValidator />
+            <div class="mb-3">
+                <label>Name</label>
+                <InputText @bind-Value="CurrentCompany.Name" class="form-control" />
+            </div>
+            <div class="mb-3">
+                <label>Address</label>
+                <InputText @bind-Value="CurrentCompany.Address" class="form-control" />
+            </div>
+            <div class="text-end">
+                <button type="button" class="btn btn-secondary" @onclick="OnClose">Cancel</button>
+                <button type="submit" class="btn btn-primary">Save</button>
+            </div>
+        </EditForm>
+    </ModalShell>
+}
+
+@code {
+    [Parameter] public bool IsVisible { get; set; }
+    [Parameter] public Company CurrentCompany { get; set; } = new();
+    [Parameter] public EventCallback OnSave { get; set; }
+    [Parameter] public EventCallback OnClose { get; set; }
+
+    private async Task HandleInternalSave()
+    {
+        if (CurrentCompany.Id == 0) 
+            await CompanyService.Save(CurrentCompany);
+        else 
+            await CompanyService.Update(CurrentCompany);
+        
+        // Notify the parent to refresh the list and hide the modal
+        await OnSave.InvokeAsync();
+    }
+}
