@@ -53,11 +53,8 @@ public class CompanyService : ICompanyService
     public async Task<Company?> GetCompanyById(int companyId)
 
     {
-
         try
-
         {
-
             var existingCompany = await _companyRepository.GetCompanyById(companyId);
 
             if (existingCompany == null)
@@ -69,13 +66,9 @@ public class CompanyService : ICompanyService
             return existingCompany;
 
         }
-
         catch (Exception ex)
-
         {
-
             throw;
-
         }
 
     }

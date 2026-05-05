@@ -1,1 +1,5 @@
 /.vs
+/Application/obj
+/BlazorTest/obj
+/Domain/obj
+/Infrastructure/obj

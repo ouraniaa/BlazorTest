@@ -12,6 +12,7 @@ public class Company
     public string Name { get; set; }
     public string Address { get; set; }
     public List<User> Users { get; set; } = new List<User>();
+    virtual public ICollection<Department> Departments { get; set; } = new List<Department>();
 
     public Company UpdateValues(Company company)
     {

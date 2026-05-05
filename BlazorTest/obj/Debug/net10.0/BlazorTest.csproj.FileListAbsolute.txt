@@ -330,10 +330,11 @@ C:\Projects\BlazorTest\BlazorTest\obj\Debug\net10.0\staticwebassets.build.json.c
 C:\Projects\BlazorTest\BlazorTest\obj\Debug\net10.0\staticwebassets.development.json
 C:\Projects\BlazorTest\BlazorTest\obj\Debug\net10.0\staticwebassets.build.endpoints.json
 C:\Projects\BlazorTest\BlazorTest\obj\Debug\net10.0\swae.build.ex.cache
-C:\Projects\BlazorTest\BlazorTest\obj\Debug\net10.0\staticwebassets.upToDateCheck.txt
 C:\Projects\BlazorTest\BlazorTest\obj\Debug\net10.0\BlazorTest.csproj.Up2Date
 C:\Projects\BlazorTest\BlazorTest\obj\Debug\net10.0\BlazorTest.dll
 C:\Projects\BlazorTest\BlazorTest\obj\Debug\net10.0\refint\BlazorTest.dll
 C:\Projects\BlazorTest\BlazorTest\obj\Debug\net10.0\BlazorTest.pdb
 C:\Projects\BlazorTest\BlazorTest\obj\Debug\net10.0\BlazorTest.genruntimeconfig.cache
 C:\Projects\BlazorTest\BlazorTest\obj\Debug\net10.0\ref\BlazorTest.dll
+C:\Projects\BlazorTest\BlazorTest\obj\Debug\net10.0\BlazorTest.sourcelink.json
+C:\Projects\BlazorTest\BlazorTest\obj\Debug\net10.0\staticwebassets.upToDateCheck.txt

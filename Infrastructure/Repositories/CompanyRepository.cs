@@ -13,7 +13,6 @@ public class CompanyRepository : UnitOfWork, ICompanyRepository
     public CompanyRepository(AppDbContext dbContext) : base(dbContext)
     {
     }
-
     public async Task<List<Company>> GetCompanies()
     {
         return await _dbContext.Companies.ToListAsync();

@@ -20,7 +20,7 @@ public class UserRepository : UnitOfWork, IUserRepository
     public async Task<List<User>> GetAll()
     {
         return await _dbContext.Users
-                               .AsNoTracking()
+                               .Include(u => u.Nicknames)
                                .ToListAsync();
     }
 

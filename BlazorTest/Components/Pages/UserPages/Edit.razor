@@ -3,9 +3,10 @@
 @using Microsoft.EntityFrameworkCore
 @using Domain.Models
 @inject IUserService UserService
+@using Application.Utilities
 @inject ICompanyService CompanyService
 @inject NavigationManager NavigationManager
-
+@rendermode InteractiveServer
 
 <PageTitle>Edit</PageTitle>
 
@@ -41,21 +42,32 @@ else
                     <ValidationMessage For="() => User.PhoneNumber" class="text-danger" />
                 </div>
                 <div class="mb-3">
-                    <label for="email" class="form-label">Email:</label>
-                    <InputText id="email" @bind-Value="User.Email" class="form-control" />
-                    <ValidationMessage For="() => User.Email" class="text-danger" />
+                    <label class="form-label">Email:</label>
+                    <InputText Value="@User.Email"
+                               ValueChanged="@((string value) => OnEmailChanged(value))"
+                               ValueExpression="@(() => User.Email)"
+                               class="form-control" />
+    
+                    @if (emailError != null)
+                    {
+                        <div class="text-danger">@emailError</div>
+                    }
                 </div>
                 <div class="mb-3">
-                    <label for="afm" class="form-label">AFM:</label>
-                    <InputText id="afm" @bind-Value="User.AFM" class="form-control" />
-                    <ValidationMessage For="() => User.AFM" class="text-danger" />
+                    <label class="form-label">AFM:</label>
+                    <InputText Value="@User.AFM"
+                               ValueChanged="@((string value) => OnAFMChanged(value))"
+                               ValueExpression="@(() => User.AFM)"
+                               class="form-control" />
+    
+                    @if (afmError != null)
+                    {
+                        <div class="text-danger">@afmError</div>
+                    }
                 </div>
                 <div class="mb-3">
                     <label for="company" class="form-label">Company:</label>
-                    @*
-                       Fix: Ensure User.CompanyId is an int. 
-                       InputSelect handles the conversion automatically if the property is typed correctly.
-                    *@
+                   
                     <InputSelect id="company" @bind-Value="User.CompanyId" class="form-select">
                         <option value="0">-- Select a Company --</option>
                         @foreach (var company in CompaniesList)
@@ -63,6 +75,44 @@ else
                             <option value="@company.Id">@company.Name</option>
                         }
                     </InputSelect>
+                    <div class="card mt-4 mb-4 shadow-sm">
+                        <div class="card-header bg-light">
+                            <strong>Manage Nicknames</strong>
+                        </div>
+                        <div class="card-body">
+                            <div class="input-group mb-3">
+                                <input type="text" @bind="newNickname" class="form-control" placeholder="Type a nickname..." />
+                                <button class="btn btn-outline-secondary" type="button" @onclick="AddNicknameToList">Add</button>
+                            </div>
+
+                            <ul class="list-group">
+                                @for (int i = 0; i < NicknameStrings.Count; i++)
+                                {
+                                    var index = i; 
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        @if (editingIndex == index)
+                                        {
+                                            <input type="text" class="form-control form-control-sm me-2"
+                                                   @bind="tempEditValue" @onkeyup="@(e => HandleKeyUp(e, index))" autofocus />
+                
+                                            <div class="btn-group">
+                                                <button type="button" class="btn btn-sm btn-success" @onclick="() => SaveEdit(index)">Save</button>
+                                                <button type="button" class="btn btn-sm btn-secondary" @onclick="CancelEdit">Cancel</button>
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <span>@NicknameStrings[index]</span>
+                                            <div class="btn-group">
+                                                <button type="button" class="btn btn-sm btn-outline-primary" @onclick="() => StartEdit(index)">Edit</button>
+                                                <button type="button" class="btn btn-sm btn-outline-danger" @onclick="() => RemoveNickname(NicknameStrings[index])">Remove</button>
+                                            </div>
+                                        }
+                                    </li>
+                                }
+                            </ul>
+                        </div>
+                    </div>
                     <ValidationMessage For="() => User.CompanyId" class="text-danger" />
                 </div>
                 <button type="submit" class="btn btn-primary">Save</button>
@@ -83,26 +133,118 @@ else
     private User? User { get; set; }
 
     private List<Company> CompaniesList = new();
+    private string? afmError; 
+    private string? emailError;
+    private string? newNickname;
+    private List<string> NicknameStrings = new();
+    
+    private string? serverError;
+
 
     protected override async Task OnInitializedAsync()
     {
-        try
+        CompaniesList = await CompanyService.GetAllCompanies();
+
+        User = await UserService.GetUserByID(Id);
+        
+        if (User is null)
         {
-            User = await UserService.GetUserByID(Id);
-            CompaniesList = await CompanyService.GetAllCompanies();
+            NavigationManager.NavigateTo("/user-management");
+            return;
         }
-        catch (Exception ex)
+
+        if (User.Nicknames != null)
         {
-            NavigationManager.NotFound();
+            NicknameStrings = User.Nicknames.Select(n => n.Value).ToList();
         }
     }
     
-    private async Task UpdateUser()
-    {      
-
-        await UserService.Update(User);
-
-        NavigationManager.NavigateTo("/user-management");
+    private void AddNicknameToList()
+    {
+        if (!string.IsNullOrWhiteSpace(newNickname) && !NicknameStrings.Contains(newNickname.Trim()))
+        {
+            NicknameStrings.Add(newNickname.Trim());
+            newNickname = string.Empty;
+        }
     }
-     
+
+    private void RemoveNickname(string nick)
+    {
+        NicknameStrings.Remove(nick);
+    }
+
+
+    private async Task UpdateUser()
+    {
+        serverError = null;
+        
+        // Validation
+        afmError = AFMValidator.ValidateVatNumber(User.AFM);
+        emailError = EmailValidator.ValidateEmail(User.Email);
+
+        if (afmError != null || emailError != null)
+        {
+            serverError = afmError ?? emailError;
+            return;
+        }
+
+        try
+        {
+            User.Nicknames = NicknameStrings.Select(name => new Nickname
+            {
+                Value = name,
+                UserId = User.Id
+            }).ToList();
+
+            await UserService.Update(User);
+            NavigationManager.NavigateTo("/user-management");
+        }
+        catch (Exception ex)
+        {
+            serverError = "Σφάλμα κατά την ενημέρωση: " + ex.Message;
+        }
+    }
+
+    private void OnEmailChanged(string value)
+    {
+        User.Email = value;
+        emailError = EmailValidator.ValidateEmail(value);
+    }
+
+    private void OnAFMChanged(string value)
+    {
+        User.AFM = value;
+        afmError = AFMValidator.ValidateVatNumber(value);
+    }
+
+    private int? editingIndex = null; 
+    private string tempEditValue = ""; 
+
+    private void StartEdit(int index)
+    {
+        editingIndex = index;
+        tempEditValue = NicknameStrings[index]; 
+    }
+
+    private void SaveEdit(int index)
+    {
+        if (!string.IsNullOrWhiteSpace(tempEditValue))
+        {
+            NicknameStrings[index] = tempEditValue.Trim();
+        }
+        CancelEdit();
+    }
+
+    private void CancelEdit()
+    {
+        editingIndex = null;
+        tempEditValue = "";
+    }
+
+    private void HandleKeyUp(KeyboardEventArgs e, int index)
+    {
+        if (e.Key == "Enter") SaveEdit(index);
+        if (e.Key == "Escape") CancelEdit();
+    }
+    private void Cancel() => NavigationManager.NavigateTo("/user-management");
 }
