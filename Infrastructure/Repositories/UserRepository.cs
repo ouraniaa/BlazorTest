@@ -24,6 +24,13 @@ public class UserRepository : UnitOfWork, IUserRepository
                                .ToListAsync();
     }
 
+    public async Task<User?> GetUserByEmail(string email)
+    {
+        return await _dbContext.Users
+                .Include(x => x.UserRoles)
+               .FirstOrDefaultAsync(x => x.Email == email);
+    }
+
     public async Task<User?> GetUserById(int userId)
     {
         return await _dbContext.Users.Where(x => x.Id == userId).FirstOrDefaultAsync();

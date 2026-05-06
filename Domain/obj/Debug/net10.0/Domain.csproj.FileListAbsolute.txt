@@ -5,8 +5,8 @@ C:\Projects\BlazorTest\Domain\obj\Debug\net10.0\Domain.GeneratedMSBuildEditorCon
 C:\Projects\BlazorTest\Domain\obj\Debug\net10.0\Domain.AssemblyInfoInputs.cache
 C:\Projects\BlazorTest\Domain\obj\Debug\net10.0\Domain.AssemblyInfo.cs
 C:\Projects\BlazorTest\Domain\obj\Debug\net10.0\Domain.csproj.CoreCompileInputs.cache
+C:\Projects\BlazorTest\Domain\obj\Debug\net10.0\Domain.sourcelink.json
 C:\Projects\BlazorTest\Domain\obj\Debug\net10.0\Domain.dll
 C:\Projects\BlazorTest\Domain\obj\Debug\net10.0\refint\Domain.dll
 C:\Projects\BlazorTest\Domain\obj\Debug\net10.0\Domain.pdb
 C:\Projects\BlazorTest\Domain\obj\Debug\net10.0\ref\Domain.dll
-C:\Projects\BlazorTest\Domain\obj\Debug\net10.0\Domain.sourcelink.json

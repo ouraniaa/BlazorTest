@@ -1,4 +1,5 @@
-﻿using Domain.Models;
+﻿using Application.Dtos.Auth;
+using Domain.Models;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -13,7 +14,9 @@ public interface IUserService
     public Task<User?> GetUser(User user);    
     public Task<User?> GetUserByID(int userId);
     public Task<List<User>> GetAllUsers();
-    public Task<User> DuplicateUser(User user, User user2);  
-    
+    public Task<User> SignUp(SignUpDto signUpDto);
+
+    public Task<User> DuplicateUser(User user, User user2);
+    public Task<User> Login(LoginModel loginModel);
 
 }

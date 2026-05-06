@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.ComponentModel.DataAnnotations;
+using Application.Dtos.Auth;
 namespace Application.Services;
 
 
@@ -63,12 +64,14 @@ public class UserService : IUserService
 
             _userRepository.Add(newUser);
             await _userRepository.SaveChangesAsync();
-
-            foreach (var item in user.Nicknames)
+            if (user.Nicknames != null)
             {
-                item.UserId = newUser.Id;
-                await _nicknameService.Save(item);
+                foreach (var item in user.Nicknames)
+                {
+                    item.UserId = newUser.Id;
+                    await _nicknameService.Save(item);
 
+                }
             }
 
             return newUser;
@@ -138,5 +141,64 @@ public class UserService : IUserService
         {
             throw;
         }
+    }
+
+    public async Task<User> SignUp(SignUpDto signUpDto)
+    {
+        try
+        {
+
+            var user = await _userRepository.GetUserByEmail(signUpDto.Email);
+            if (user != null)
+                throw new Exception("User exists");
+            string encryptedPassword = PasswordEncryption.HashPassword(signUpDto.Password);
+            var newUser = new User()
+            {
+                Name = signUpDto.Name,
+                LastName = signUpDto.LastName,
+                Email = signUpDto.Email,
+                AFM = signUpDto.AFM,
+                PhoneNumber = signUpDto.PhoneNumber,
+                Password = encryptedPassword
+            };
+
+            _userRepository.Add(newUser); 
+            await _userRepository.SaveChangesAsync();
+
+            var newRole = new UserRoles()
+            {
+                UserId = newUser.Id,
+                RoleId = 9
+            };
+
+            _userRepository.Add(newRole);
+            await _userRepository.SaveChangesAsync();
+
+            return newUser;
+        }
+
+        catch (Exception ex)
+        {
+            throw;
+        }
+    }
+
+    public async Task<User?> Login(LoginModel loginDto)
+    {
+        var user = await _userRepository.GetUserByEmail(loginDto.Email);
+
+        if (user == null)
+        {
+            return null;
+        }
+
+        bool isPasswordValid = PasswordEncryption.VerifyPassword(loginDto.Password, user.Password);
+
+        if (!isPasswordValid)
+        {
+            return null;
+        }
+
+        return user;
     }
 }
