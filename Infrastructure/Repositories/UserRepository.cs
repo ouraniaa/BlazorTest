@@ -10,10 +10,8 @@ namespace Infrastructure.Repositories;
 
 public class UserRepository : UnitOfWork, IUserRepository
 {
-    private readonly AppDbContext _dbContext;
     public UserRepository(AppDbContext dbContext) : base(dbContext)
     {
-        _dbContext = dbContext;
     }
       
    
@@ -28,6 +26,7 @@ public class UserRepository : UnitOfWork, IUserRepository
     {
         return await _dbContext.Users
                 .Include(x => x.UserRoles)
+                    .ThenInclude(ur => ur.Role)
                .FirstOrDefaultAsync(x => x.Email == email);
     }
 

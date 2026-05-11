@@ -1,7 +1,7 @@
-﻿<div class="top-row ps-3 navbar navbar-dark">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="">BlazorTest</a>
-    </div>
+﻿a<div class="top-row ps-3 navbar navbar-dark">
+<div class="container-fluid">
+    <a class="navbar-brand" href="">BlazorTest</a>
+</div>
 </div>
 
 <input type="checkbox" title="Navigation menu" class="navbar-toggler" />
@@ -15,26 +15,12 @@
                 <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
             </NavLink>
         </div>
-
+                
         <div class="nav-item px-3">
-            <NavLink class="nav-link" href="counter">
-                <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Counter
+            <NavLink class="nav-link" href="personal-info">
+                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Personal Information
             </NavLink>
         </div>
-
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="weather">
-                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Weather
-            </NavLink>
-        </div>
-
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="error">
-                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Error
-            </NavLink>
-        </div>
-
-        
         <div class="nav-item px-3">
             <NavLink class="nav-link" href="user-management">
                 <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> User Management
@@ -45,6 +31,29 @@
             <NavLink class="nav-link" href="company-management">
                 <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Companies
             </NavLink>
-        </div>      
+        </div>
+        
+        <div class="nav-footer px-3 py-3 mt-auto">
+            <div class="d-grid gap-2">
+                <NavLink class="nav-link btn btn-outline-light text-start" href="login">
+                    <span class="bi bi-box-arrow-in-right" aria-hidden="true"></span> Login
+                </NavLink>
+        
+                <button class="nav-link btn btn-outline-danger text-start border-0" @onclick="HandleLogout">
+                    <span class="bi bi-box-arrow-left" aria-hidden="true"></span> Logout
+                </button>
+            </div>
+        </div>
+
     </nav>
 </div>
+
+
+
+@code {
+    private void HandleLogout()
+    {
+        // Add your logout logic here (e.g., clearing tokens/auth state)
+        // Since you are using DDD, this might call an IIdentityService
+    }
+}

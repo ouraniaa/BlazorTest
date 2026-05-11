@@ -1,13 +1,19 @@
 ﻿
+using Application.Dtos.Auth;
 using Application.Interfaces;
 using Application.Utilities;
 using Domain.IRepositories;
 using Domain.Models;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
-using System.Text;
 using System.ComponentModel.DataAnnotations;
-using Application.Dtos.Auth;
+using System.Security.AccessControl;
+using System.Security.Claims;
+using System.Text;
 namespace Application.Services;
 
 
@@ -16,12 +22,16 @@ public class UserService : IUserService
     private readonly IUserRepository _userRepository;
     private readonly ICompanyService _companyService;
     private readonly INicknameService _nicknameService;
+    private readonly IHttpContextAccessor _httpContextAccessor;
+    private readonly ILogger<UserService> logger;
 
-    public UserService(IUserRepository userRepository,ICompanyService companyService, INicknameService nicknameService)
+    public UserService(IUserRepository userRepository,ICompanyService companyService, INicknameService nicknameService, IHttpContextAccessor httpContextAccessor, ILogger<UserService> logger)
     {
         _userRepository = userRepository;        
         _companyService = companyService;
         _nicknameService = nicknameService;
+        _httpContextAccessor = httpContextAccessor;
+        this.logger = logger;
     }
 
     public Task<User> DuplicateUser(User user, User user2)
@@ -46,7 +56,7 @@ public class UserService : IUserService
             }
             if (user.CompanyId != null)
             {
-                var company = await _companyService.GetCompanyByID((int)user.CompanyId);
+                var company = await _companyService.GetCompanyById((int)user.CompanyId);
 
                 Console.WriteLine(company.Name);
 
@@ -147,10 +157,19 @@ public class UserService : IUserService
     {
         try
         {
+            string? emailError = EmailValidator.ValidateEmail(signUpDto.Email);
+            if (emailError != null)
+                throw new Exception(emailError);
 
-            var user = await _userRepository.GetUserByEmail(signUpDto.Email);
-            if (user != null)
-                throw new Exception("User exists");
+            string? afmError = AFMValidator.ValidateVatNumber(signUpDto.AFM);
+            if (afmError != null)
+                throw new Exception(afmError);
+
+            var userByEmail = await _userRepository.GetUserByEmail(signUpDto.Email);
+            if (userByEmail != null)
+                throw new Exception("User already exists");
+
+
             string encryptedPassword = PasswordEncryption.HashPassword(signUpDto.Password);
             var newUser = new User()
             {
@@ -168,7 +187,7 @@ public class UserService : IUserService
             var newRole = new UserRoles()
             {
                 UserId = newUser.Id,
-                RoleId = 9
+                RoleId = 7
             };
 
             _userRepository.Add(newRole);
@@ -183,22 +202,43 @@ public class UserService : IUserService
         }
     }
 
-    public async Task<User?> Login(LoginModel loginDto)
+    public async Task<User> Login(LoginModel loginDto)
     {
-        var user = await _userRepository.GetUserByEmail(loginDto.Email);
-
-        if (user == null)
+        try
         {
-            return null;
-        }
+            var user = await _userRepository.GetUserByEmail(loginDto.Email);
 
-        bool isPasswordValid = PasswordEncryption.VerifyPassword(loginDto.Password, user.Password);
+            if (user == null)
+            {
+                return null;
+            }
 
-        if (!isPasswordValid)
+            bool isPasswordValid = PasswordEncryption.VerifyPassword(loginDto.Password, user.Password);
+
+            if (!isPasswordValid)
+            {
+                return null;
+            }
+
+            var claims = new List<Claim>
         {
-            return null;
-        }
+            new Claim(ClaimTypes.Name, user.Email, ClaimValueTypes.String),
+            new Claim(ClaimTypes.Role, user.UserRoles.FirstOrDefault()?.Role?.Name ?? "User", ClaimValueTypes.String),
+        };
+            var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+            var principal = new ClaimsPrincipal(identity);
+            var httpContext = _httpContextAccessor.HttpContext;
+            if (httpContext != null)
+            {
+                await httpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal);                
+            }
 
-        return user;
+            return user;
+        }
+        catch(Exception ex)
+        {
+            logger.LogError("Login error: ", ex);
+            throw;
+        }
     }
 }

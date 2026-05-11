@@ -1,9 +1,10 @@
 ﻿@page "/login"
 @using Application.Interfaces
+@using Microsoft.AspNetCore.Authentication
+@using Microsoft.AspNetCore.Authentication.Cookies
 @rendermode InteractiveServer
 @inject IUserService UserService
 @inject NavigationManager NavManager
-
 
 <div class="container mt-5">
     <div class="row justify-content-center">
@@ -54,11 +55,23 @@
         try
         {
             var user = await UserService.Login(loginUser);
-
-            if (user != null && user.UserRoles.Any(u => u.RoleId != 7 ))
+            if (user != null)
             {
-                Console.WriteLine("Login Successful!");
-                NavManager.NavigateTo("/");
+                var roleId = user.UserRoles.FirstOrDefault()?.RoleId;
+
+                if (roleId == 7) 
+                {
+                    NavManager.NavigateTo("/company-management");
+                }
+                else if (roleId == 8) 
+                {
+                    NavManager.NavigateTo($"/my-employees/{user.CompanyId}"); 
+                }
+                else
+                {
+                    NavManager.NavigateTo("/personal-info");
+                }
+                
             }
             else
             {
@@ -70,4 +83,5 @@
             errorMessage = ex.Message;
         }
     }
+
 }

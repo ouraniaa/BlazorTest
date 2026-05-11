@@ -8,7 +8,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Content Remove="Components\Layout\UserLayout.razor" />
     <Content Remove="Components\UI\ModalShell.razor" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="Components\Layout\UserLayout.razor" />
   </ItemGroup>
 
   <ItemGroup>

@@ -11,6 +11,9 @@ public interface ICompanyService
     public Task<Company> Update(Company company);
     public Task DeleteById(int companyId);
     public Task<Company?> GetCompany(Company company);
-    public Task<Company?> GetCompanyByID(int companyId);
+    public Task<Company?> GetCompanyById(int companyId);
     public Task<List<Company>> GetAllCompanies();
+    public Task<Company?> GetCompanyDetails(int id);
+    public Task<List<User>> GetEmployeesByCompanyId(int companyId);
+
 }

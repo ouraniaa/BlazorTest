@@ -24,7 +24,6 @@ public partial class AppDbContext : DbContext
 
     public virtual DbSet<User> Users { get; set; }
     public virtual DbSet<Company> Companies { get; set; }
-    public DbSet<Department> Departments { get; set; }
     public DbSet<Nickname> Nicknames { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)

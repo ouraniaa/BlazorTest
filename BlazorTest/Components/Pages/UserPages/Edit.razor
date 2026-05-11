@@ -178,13 +178,17 @@ else
     {
         serverError = null;
         
-        // Validation
         afmError = AFMValidator.ValidateVatNumber(User.AFM);
         emailError = EmailValidator.ValidateEmail(User.Email);
 
         if (afmError != null || emailError != null)
         {
             serverError = afmError ?? emailError;
+            return;
+        }
+        if (User.CompanyId == 0)
+        {
+            serverError = "Παρακαλώ επιλέξτε μια εταιρεία.";
             return;
         }
 
