@@ -54,6 +54,12 @@
             </div>
 
             <div class="mb-3">
+                <label for="password" class="form-label">Password:</label>
+                <InputText id="password" type="password" @bind-Value="User.Password" class="form-control" />
+                <ValidationMessage For="() => User.Password" class="text-danger" />
+            </div>
+
+            <div class="mb-3">
                 <label for="company" class="form-label">Company:</label>
                 <InputSelect id="company" @bind-Value="User.CompanyId" class="form-select">
                     <option value="0">-- Select a Company --</option>

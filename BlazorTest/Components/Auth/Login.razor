@@ -15,12 +15,10 @@
                     <h3 class="card-title text-center mb-4">Login</h3>
 
                     <EditForm Model="@loginUser" OnValidSubmit="HandleLogin" FormName="LoginModel">
-                        <AntiforgeryToken />
                         <DataAnnotationsValidator />
                         <ValidationSummary class="text-danger" />
+
                         
-
-
                         <div class="mb-3">
                             <label for="email" class="form-label">Email Address</label>
                             <InputText id="email" class="form-control" @bind-Value="loginUser.Email" placeholder="name@example.com" />
@@ -53,7 +51,7 @@
     [CascadingParameter]
     public HttpContext? HttpContext { get; set; }
 
-    [SupplyParameterFromForm]     
+    [SupplyParameterFromForm]
     public Application.Dtos.Auth.LoginModel loginUser { get; set; } = new();
     private string? errorMessage;
 
@@ -68,17 +66,17 @@
             {
                 var roleId = user.UserRoles.FirstOrDefault()?.RoleId;
 
-                if (roleId == 7) 
+                if (roleId == 7)
                 {
-                    NavManager.NavigateTo("/company-management");
+                    NavManager.NavigateTo("/");
                 }
-                else if (roleId == 8) 
+                else if (roleId == 8)
                 {
-                    NavManager.NavigateTo($"/my-employees/{user.CompanyId}"); 
+                    NavManager.NavigateTo($"/my-employees/{user.CompanyId}");
                 }
                 else
                 {
-                    NavManager.NavigateTo("/personal-info");
+                    NavManager.NavigateTo("/");
                 }
                 
             }

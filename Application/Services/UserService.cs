@@ -49,18 +49,13 @@ public class UserService : IUserService
         try
         {
             string afmError = AFMValidator.ValidateVatNumber(user.AFM);
-            if (afmError != null)
+            if (afmError != null) throw new Exception("Invalid AFM");
+
+            if (!string.IsNullOrEmpty(user.Password))
             {
-                throw new Exception("The AFM provided is invalid. Please check the 9 digits.");
-
+                user.Password = PasswordEncryption.HashPassword(user.Password);
             }
-            if (user.CompanyId != null)
-            {
-                var company = await _companyService.GetCompanyById((int)user.CompanyId);
 
-                Console.WriteLine(company.Name);
-
-            }
             User newUser = new User
             {
                 Name = user.Name,
@@ -68,29 +63,35 @@ public class UserService : IUserService
                 Email = user.Email,
                 AFM = user.AFM,
                 PhoneNumber = user.PhoneNumber,
-                Company = user.Company,
-                CompanyId = user.CompanyId
+                Password = user.Password,
+                CompanyId = user.CompanyId,
+                Nicknames = new List<Nickname>()
             };
 
-            _userRepository.Add(newUser);
-            await _userRepository.SaveChangesAsync();
             if (user.Nicknames != null)
             {
                 foreach (var item in user.Nicknames)
                 {
-                    item.UserId = newUser.Id;
-                    await _nicknameService.Save(item);
-
+                    newUser.Nicknames.Add(new Nickname
+                    {
+                        Value = item.Value
+                    });
                 }
             }
 
-            return newUser;
+            _userRepository.Add(newUser);
+            await _userRepository.SaveChangesAsync();
 
+            var defaultRole = new UserRoles { UserId = newUser.Id, RoleId = 9 };
+            _userRepository.Add(defaultRole);
+            await _userRepository.SaveChangesAsync();
+
+            return newUser;
         }
         catch (Exception ex)
         {
+            logger.LogError(ex, "Error saving user");
             throw;
-
         }
     }
 
@@ -208,10 +209,8 @@ public class UserService : IUserService
         {
             var user = await _userRepository.GetUserByEmail(loginDto.Email);
 
-            if (user == null)
-            {
-                return null;
-            }
+            if (user == null) return null;
+            
 
             bool isPasswordValid = PasswordEncryption.VerifyPassword(loginDto.Password, user.Password);
 
@@ -224,9 +223,11 @@ public class UserService : IUserService
         {
             new Claim(ClaimTypes.Name, user.Email, ClaimValueTypes.String),
             new Claim(ClaimTypes.Role, user.UserRoles.FirstOrDefault()?.Role?.Name ?? "User", ClaimValueTypes.String),
+            new Claim("CompanyId", user.CompanyId?.ToString() ?? "0")
         };
             var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
             var principal = new ClaimsPrincipal(identity);
+
             var httpContext = _httpContextAccessor.HttpContext;
             if (httpContext != null)
             {

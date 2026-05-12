@@ -1,0 +1,165 @@
+﻿@page "/personal-info"
+@using Domain.Models
+@using Application.Interfaces
+@using System.Security.Claims
+@using Application.Utilities
+@using Microsoft.AspNetCore.Components.Authorization
+@inject IUserService UserService
+@inject AuthenticationStateProvider AuthStateProvider
+@inject NavigationManager Nav
+@rendermode InteractiveServer
+
+<PageTitle>Το Προφίλ μου</PageTitle>
+
+<div class="container mt-5 pb-5">
+    <div class="row justify-content-center">
+        <div class="col-md-10 col-lg-8">
+            
+            <div class="card shadow-sm rounded-3 border-0">
+                <div class="card-header bg-primary text-white p-4 rounded-top-3">
+                    <h3 class="mb-0 d-flex align-items-center">
+                        <i class="bi bi-person-badge me-3"></i> Προσωπικά Στοιχεία
+                    </h3>
+                </div>
+                
+                <div class="card-body p-4 p-md-5">
+                    @if (user == null)
+                    {
+                        <div class="text-center py-5">
+                            <div class="spinner-border text-primary" role="status"></div>
+                            <p class="mt-3 text-secondary">Φόρτωση δεδομένων προφίλ...</p>
+                        </div>
+                    }
+                    else
+                    {
+                        @if (!string.IsNullOrEmpty(statusMessage))
+                        {
+                            <div class="alert alert-success border-0 shadow-sm rounded-3 mb-4 d-flex align-items-center" role="alert">
+                                <i class="bi bi-check-circle-fill me-2"></i>
+                                <div>@statusMessage</div>
+                                <button type="button" class="btn-close ms-auto" @onclick="() => statusMessage = null"></button>
+                            </div>
+                        }
+
+                        <EditForm Model="user" OnValidSubmit="HandleUpdate">
+                            <DataAnnotationsValidator />
+
+                            <div class="row g-4 mb-4">
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold"><i class="bi bi-info-circle me-1"></i>Όνομα</label>
+                                    <InputText @bind-Value="user.Name" class="form-control rounded-3" placeholder="Εισάγετε όνομα" />
+                                    <div class="text-danger small mt-1">
+                                        <ValidationMessage For="() => user.Name" />
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold"><i class="bi bi-info-circle me-1"></i>Επώνυμο</label>
+                                    <InputText @bind-Value="user.LastName" class="form-control rounded-3" placeholder="Εισάγετε επώνυμο" />
+                                    <div class="text-danger small mt-1">
+                                        <ValidationMessage For="() => user.LastName" />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row g-4 mb-4">
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold"><i class="bi bi-envelope me-1"></i>Email</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light border-end-0 rounded-start-3">
+                                            <i class="bi bi-lock-fill text-muted"></i>
+                                        </span>
+                                        <input type="text" class="form-control bg-light border-start-0 rounded-end-3" value="@user.Email" disabled />
+                                    </div>
+                                    <small class="text-muted d-block mt-1">Το email είναι κλειδωμένο.</small>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold"><i class="bi bi-telephone me-1"></i>Τηλέφωνο</label>
+                                    <InputText @bind-Value="user.PhoneNumber" class="form-control rounded-3" placeholder="π.χ. 2101234567" />
+                                    @if (!string.IsNullOrEmpty(errorMessage) && errorMessage.Contains("τηλέφωνο"))
+                                    {
+                                        <div class="text-danger small mt-1"><i class="bi bi-exclamation-triangle-fill"></i> @errorMessage</div>
+                                    }
+                                    <div class="text-danger small mt-1">
+                                        <ValidationMessage For="() => user.PhoneNumber" />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mb-4">
+                                <label class="form-label fw-bold text-secondary"><i class="bi bi-hash me-1"></i>ΑΦΜ (Tax ID)</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-white border-end-0 rounded-start-3">
+                                        <i class="bi bi-patch-check text-primary"></i>
+                                    </span>
+                                    <InputText @bind-Value="user.AFM"
+                                               class="@($"form-control border-start-0 rounded-end-3 {(errorMessage != null && errorMessage.Contains("ΑΦΜ") ? "is-invalid" : "")}")"
+                                               placeholder="Εισάγετε 9 ψηφία" />
+                                </div>
+                                @if (!string.IsNullOrEmpty(errorMessage) && errorMessage.Contains("ΑΦΜ"))
+                                {
+                                    <div class="text-danger small mt-1"><i class="bi bi-exclamation-triangle-fill"></i> @errorMessage</div>
+                                }
+                            </div>
+
+                            <div class="mt-5 d-flex flex-column flex-md-row gap-3 pt-3 border-top">
+                                <button type="submit" class="btn btn-success btn-lg px-5 rounded-3 shadow-sm">
+                                    <i class="bi bi-check-lg me-2"></i>Αποθήκευση
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary btn-lg px-5 rounded-3" @onclick='() => Nav.NavigateTo("/")'>
+                                    <i class="bi bi-x me-2"></i>Ακύρωση
+                                </button>
+                            </div>
+                        </EditForm>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private User? user;
+    private string? statusMessage;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var claimsUser = authState.User;
+
+        if (claimsUser.Identity is not null && claimsUser.Identity.IsAuthenticated)
+        {
+            var email = claimsUser.Identity.Name;
+            
+            if (!string.IsNullOrEmpty(email))
+            {
+                var allUsers = await UserService.GetAllUsers();
+                user = allUsers.FirstOrDefault(u => u.Email == email);
+            }
+        }
+
+        if (user == null)
+        {
+            Nav.NavigateTo("/login");
+        }
+    }
+
+    private async Task HandleUpdate()
+    {
+        statusMessage = null;
+        errorMessage = null;
+
+        var afmError = AFMValidator.ValidateVatNumber(user!.AFM);
+        var phoneError = PhoneValidator.ValidatePhoneNumber(user!.PhoneNumber);
+
+        if (afmError != null) { errorMessage = afmError; return; }
+        if (phoneError != null) { errorMessage = phoneError; return; }
+
+        try
+        {
+            await UserService.Update(user!);
+            statusMessage = "Τα στοιχεία σας ενημερώθηκαν επιτυχώς!";
+        }
+        catch (Exception ex) { errorMessage = ex.Message; }
+    }
+}

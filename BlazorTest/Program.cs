@@ -15,7 +15,7 @@ var sqlConnectionString = builder.Configuration.GetConnectionString("DefaultConn
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(sqlConnectionString);
 builder.Services.AddHttpContextAccessor();
-
+builder.Services.AddAntiforgery();
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
@@ -27,7 +27,7 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
     });
 builder.Services.AddAuthorization();
 builder.Services.AddCascadingAuthenticationState();
-
+builder.Services.AddControllers();
 
 var app = builder.Build();
 
@@ -40,13 +40,17 @@ if (!app.Environment.IsDevelopment())
 app.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages: true);
 app.UseHttpsRedirection();
 
-app.UseAntiforgery();
+app.UseStaticFiles();
+app.UseRouting();
+
 app.UseAuthentication();
 app.UseAuthorization();
-
+app.UseAntiforgery();
 
 app.MapStaticAssets();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
+app.MapControllers();
+
 
 app.Run();

@@ -27,6 +27,7 @@ public class UserRepository : UnitOfWork, IUserRepository
         return await _dbContext.Users
                 .Include(x => x.UserRoles)
                     .ThenInclude(ur => ur.Role)
+                .Include(x => x.Company)
                .FirstOrDefaultAsync(x => x.Email == email);
     }
 
