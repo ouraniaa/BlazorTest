@@ -2,20 +2,24 @@
 @using Application.Interfaces
 @using Microsoft.AspNetCore.Authentication
 @using Microsoft.AspNetCore.Authentication.Cookies
-@rendermode InteractiveServer
 @inject IUserService UserService
 @inject NavigationManager NavManager
 
+
 <div class="container mt-5">
     <div class="row justify-content-center">
+
         <div class="col-md-4">
             <div class="card shadow">
                 <div class="card-body">
                     <h3 class="card-title text-center mb-4">Login</h3>
 
-                    <EditForm Model="@loginUser" OnValidSubmit="HandleLogin">
+                    <EditForm Model="@loginUser" OnValidSubmit="HandleLogin" FormName="LoginModel">
+                        <AntiforgeryToken />
                         <DataAnnotationsValidator />
                         <ValidationSummary class="text-danger" />
+                        
+
 
                         <div class="mb-3">
                             <label for="email" class="form-label">Email Address</label>
@@ -44,8 +48,13 @@
     </div>
 </div>
 
+
 @code {
-    private Application.Dtos.Auth.LoginModel loginUser = new();
+    [CascadingParameter]
+    public HttpContext? HttpContext { get; set; }
+
+    [SupplyParameterFromForm]     
+    public Application.Dtos.Auth.LoginModel loginUser { get; set; } = new();
     private string? errorMessage;
 
     private async Task HandleLogin()
