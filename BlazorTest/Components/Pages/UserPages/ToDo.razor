@@ -1,0 +1,118 @@
+﻿@page "/todo"
+@attribute [Authorize]
+@using Application.Interfaces
+@using Domain.Models
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
+@inject IToDoService ToDoService
+@inject AuthenticationStateProvider AuthStateProvider
+@rendermode InteractiveServer
+
+<PageTitle>My Planner</PageTitle>
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="text-primary fw-bold">My Dashboard</h2>
+        <div class="d-flex gap-2">
+            <input type="text" class="form-control" @bind="newListName" placeholder="Όνομα νέας λίστας..." />
+            <button class="btn btn-success shadow-sm text-nowrap" @onclick="HandleCreateList">
+                <i class="bi bi-plus-circle"></i> Create List
+            </button>
+        </div>
+    </div>
+
+    @if (isLoading)
+    {
+        <div class="text-center mt-5">
+            <div class="spinner-border text-primary" role="status"></div>
+            <p class="mt-2 text-muted">Fetching your tasks...</p>
+        </div>
+    }
+    else if (!userLists.Any())
+    {
+        <div class="alert alert-light border text-center p-5 shadow-sm rounded-4">
+            <i class="bi bi-card-checklist fs-1 text-muted mb-3 d-block"></i>
+            <h4>Your planner is empty!</h4>
+            <p class="text-muted">Ξεκίνα δημιουργώντας την πρώτη σου λίστα παραπάνω.</p>
+        </div>
+    }
+    else
+    {
+        <div class="row g-4">
+            @foreach (var list in userLists)
+            {
+                <div class="col-12 col-md-6 col-lg-4">
+                    <List ToDoList="list" OnListChanged="LoadDashboardData" />
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    private List<ToDoList> userLists = new();
+    private int currentUserId;
+    private string newListName = "";
+    private bool isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        if (user.Identity?.IsAuthenticated == true)
+        {
+            var userIdClaim = user.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier);
+            if (userIdClaim != null && int.TryParse(userIdClaim.Value, out int id))
+            {
+                currentUserId = id;
+                await LoadDashboardData();
+            }
+        }
+    
+        isLoading = false;
+        StateHasChanged(); // Πολύ σημαντικό για να ενεργοποιηθούν τα κουμπιά
+    }
+
+    private async Task LoadDashboardData()
+    {
+        var data = await ToDoService.GetUserTodoListsAsync(currentUserId);
+        
+        // Αν το data είναι null, το μετατρέπουμε σε άδεια λίστα για να μην κρασάρει το UI
+        userLists = data ?? new List<ToDoList>();
+        
+        StateHasChanged();
+    }
+
+    private async Task HandleCreateList()
+    {
+        Console.WriteLine($"Attempting to create list: {newListName} for user: {currentUserId}");
+
+        if (string.IsNullOrWhiteSpace(newListName))
+        {
+            Console.WriteLine("Error: List name is empty.");
+            return;
+        }
+
+        if (currentUserId == 0)
+        {
+            Console.WriteLine("Error: UserId is 0. Auth might not be ready.");
+            return;
+        }
+
+        try
+        {
+            // Κλήση του service
+            await ToDoService.CreateListAsync(newListName, currentUserId);
+        
+            Console.WriteLine("List created successfully!");
+        
+            newListName = ""; // Καθαρισμός input
+            await LoadDashboardData(); // Επανεκκίνηση φόρτωσης
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Database Error: {ex.Message}");
+        }
+    }
+}

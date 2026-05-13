@@ -25,6 +25,8 @@ public partial class AppDbContext : DbContext
     public virtual DbSet<User> Users { get; set; }
     public virtual DbSet<Company> Companies { get; set; }
     public DbSet<Nickname> Nicknames { get; set; }
+    public DbSet<ToDoList> TodoLists { get; set; }
+    public DbSet<TaskItem> TaskItems { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -70,8 +72,20 @@ public partial class AppDbContext : DbContext
             .HasOne(ur => ur.Role)
             .WithMany(r => r.UserRoles)
             .HasForeignKey(ur => ur.RoleId);
-    }
 
+        modelBuilder.Entity<ToDoList>()
+            .HasOne(tl => tl.User)
+            .WithMany()
+            .HasForeignKey(tl => tl.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<TaskItem>()
+            .HasOne(ti => ti.TodoList)
+            .WithMany(tl => tl.Tasks)
+            .HasForeignKey(ti => ti.TodoListId)
+            .OnDelete(DeleteBehavior.Cascade);
+    }
+        
 
 }
 

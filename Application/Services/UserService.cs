@@ -1,5 +1,4 @@
-﻿
-using Application.Dtos.Auth;
+﻿using Application.Dtos.Auth;
 using Application.Interfaces;
 using Application.Utilities;
 using Domain.IRepositories;
